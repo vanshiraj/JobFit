@@ -1,6 +1,6 @@
 const { GoogleGenAI } = require("@google/genai");
 const { z } = require("zod");
-const puppeteer = require("puppeteer");
+const loadPuppeteer = () => import("puppeteer");
 
 const MODEL = "gemini-3.5-flash-lite";
 
@@ -892,6 +892,8 @@ Do not return anything outside the JSON object.
   // --------------------------------------------------
   // PUPPETEER
   // --------------------------------------------------
+
+  const { default: puppeteer } = await loadPuppeteer();
 
   const browser = await puppeteer.launch({
     headless: true,
