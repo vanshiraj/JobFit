@@ -8,7 +8,7 @@ const Redis = require('ioredis');
 
 dotenv.config();
 
-const redis = new Redis({
+const redis = new Redis(process.env.REDIS_URL || {
     host: process.env.REDIS_HOST || 'localhost',
     port: Number(process.env.REDIS_PORT) || 6379,
     retryStrategy(times) {

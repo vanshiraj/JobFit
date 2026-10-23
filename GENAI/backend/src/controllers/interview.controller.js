@@ -1,4 +1,4 @@
-const { PDFParse } = require("pdf-parse");
+const pdfParse = require("pdf-parse");
 const mammoth = require("mammoth");
 
 const {
@@ -32,15 +32,9 @@ async function generateInterviewReportcontroller(req, res) {
       resumefile.mimetype === "application/pdf" ||
       resumefile.originalname.toLowerCase().endsWith(".pdf")
     ) {
-      const parser = new PDFParse({
-        data: resumefile.buffer,
-      });
-
-      const result = await parser.getText();
+      const result = await pdfParse(resumefile.buffer);
 
       resumeText = result.text;
-
-      await parser.destroy();
     }
 
     // DOCX

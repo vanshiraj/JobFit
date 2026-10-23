@@ -16,7 +16,7 @@ const {
 } = require("@langchain/google-genai");
 const { TavilySearch } = require("@langchain/tavily");
 const fs = require("fs");
-const { PDFParse } = require("pdf-parse");
+const pdfParse = require("pdf-parse");
 const { RecursiveCharacterTextSplitter } = require("@langchain/textsplitters");
 const { TaskType } = require("@google/generative-ai");
 const { QdrantVectorStore } = require("@langchain/qdrant");
@@ -57,6 +57,7 @@ const initializeVectorStore = async () => {
 
   vectorStore = await QdrantVectorStore.fromExistingCollection(embeddings, {
     url: process.env.QDRANT_URL,
+    apiKey: process.env.QDRANT_API_KEY,
     collectionName: "grocery_knowledge",
   });
   console.log("Qdrant connected successfully");
@@ -70,10 +71,7 @@ const upload = async () => {
   console.log("Reading PDF...");
   const pdfFile = "./knowledge.pdf";
   const buffer = fs.readFileSync(pdfFile);
-  const pdfresult = new PDFParse({
-    data: buffer,
-  });
-  const text = await pdfresult.getText();
+  const text = await pdfParse(buffer);
   const alltext = text.text;
   console.log("PDF text extracted");
   // =================================================
