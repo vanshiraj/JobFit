@@ -8,17 +8,24 @@ const Redis = require('ioredis');
 
 dotenv.config();
 
-const redis = new Redis(process.env.REDIS_URL || {
-    host: process.env.REDIS_HOST || 'localhost',
-    port: Number(process.env.REDIS_PORT) || 6379,
-    retryStrategy(times) {
-        return Math.min(times * 100, 3000);
-    }
-});
+const redisConfig = process.env.REDIS_URL || (
+    process.env.REDIS_HOST || process.env.REDIS_PORT
+        ? {
+            host: process.env.REDIS_HOST || 'localhost',
+            port: Number(process.env.REDIS_PORT) || 6379,
+            retryStrategy(times) {
+                return Math.min(times * 100, 3000);
+            }
+        }
+        : null
+);
+const redis = redisConfig ? new Redis(redisConfig) : null;
 
-redis.on('error', (err) => {
-    console.error('Redis auth connection error:', err.message);
-});
+if (redis) {
+    redis.on('error', (err) => {
+        console.error('Redis auth connection error:', err.message);
+    });
+}
 
 async function registerUser(req, res) {
     const { name, email, password } = req.body;
@@ -49,7 +56,7 @@ async function registerUser(req, res) {
         });
 
         try {
-            await redis.del('allusers');
+            if (redis) await redis.del('allusers');
         } catch (redisErr) {
             console.error('Redis cache clear error:', redisErr.message);
         }
@@ -243,7 +250,7 @@ async function getMe(req, res) {
 async function getMeredis(req, res) {
     try {
         const cacheKey = `user:${req.user.userId}`;
-        const cached = await redis.get(cacheKey);
+        const cached = redis ? await redis.get(cacheKey) : null;
 
         if (cached) {
             return res.status(200).json({
@@ -266,7 +273,7 @@ async function getMeredis(req, res) {
             email: user.email
         };
 
-        await redis.set(
+        if (redis) await redis.set(
             cacheKey,
             JSON.stringify(userData),
             'EX',
@@ -310,7 +317,7 @@ async function getallusers(req, res) {
 async function getallusersbyredis(req, res) {
     try {
         const cacheKey = 'allusers';
-        const cached = await redis.get(cacheKey);
+        const cached = redis ? await redis.get(cacheKey) : null;
 
         if (cached) {
             return res.status(200).json({
@@ -327,7 +334,7 @@ async function getallusersbyredis(req, res) {
             email: user.email
         }));
 
-        await redis.set(
+        if (redis) await redis.set(
             cacheKey,
             JSON.stringify(userData),
             'EX',
