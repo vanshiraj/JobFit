@@ -1,3 +1,4 @@
+require("@napi-rs/canvas");
 require("dotenv").config();
 const {
   StateGraph,
